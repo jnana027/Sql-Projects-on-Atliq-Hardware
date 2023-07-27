@@ -1,0 +1,38 @@
+SELECT * FROM dim_customer;
+
+SELECT * FROM dim_product;
+
+SELECT * FROM fact_forecast_monthly;
+
+SELECT * FROM fact_freight_cost;
+
+SELECT * FROM fact_gross_price;
+
+SELECT * FROM fact_manufacturing_cost;
+
+SELECT * FROM fact_post_invoice_deductions;
+
+SELECT * FROM fact_pre_invoice_deductions;
+
+SELECT * FROM fact_sales_monthly;
+
+---find distinct market in dim_customer.
+    select distinct market from dim_customer;
+
+---find distinct channel in dim_customer.
+    select distinct channel from dim_customer;
+
+---find distinct region in dim_customer.
+    select distinct region from dim_customer;
+
+---find distinct division in dim_product.
+    SELECT distinct division FROM dim_product;
+
+---find distinct segment in dim_product.
+    SELECT distinct segment FROM dim_product;
+
+---find distinct category in dim_product.
+    SELECT distinct category FROM dim_product;
+
+---find all the column from dim_product table where product_code is "A0118150101"
+   select * from dim_product where product_code="A0118150101";
