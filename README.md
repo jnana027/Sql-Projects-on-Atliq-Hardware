@@ -52,3 +52,5 @@ Atliq hardware sales a Mouse to his customer(croma) 30 $ means Gross price or ba
                    =Gross Margin(Profit):5
             Gross Margin % of Net sales(GM/NS):20 %
 
+            ![Atliq mouse](https://github.com/jnana027/Sql-Projects-on-Atliq-Hardware/assets/120124430/f0b58c1f-0b05-443b-98ec-aabe77eee4ab)
+
