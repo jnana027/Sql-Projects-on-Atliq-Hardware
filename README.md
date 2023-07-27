@@ -21,10 +21,8 @@ Atliq hardware sales a Mouse to his customer(croma) 30 $ means Gross price or ba
 
 *pre-invoice Deduction:Yearly discount agreements made at the beginning of each financial year.
 
-                            Gross price :30 $
-                             
+                            Gross price :30 $    
                   -pre-invoice Deduction:2
-                  
                 ------------------------------- ---- 
                          =Net Invoice sales:28
                          
