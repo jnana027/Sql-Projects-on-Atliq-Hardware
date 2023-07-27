@@ -14,8 +14,11 @@ Distributor channels means they sales his product to a Big customer,the customer
 ![last](https://github.com/jnana027/Sql-Projects-on-Atliq-Hardware/assets/120124430/2f215e38-2485-42d8-b041-1dab9ce515d0)
 
 Profitb and Loss(P & L):
+
 Example:
+
 Atliq hardware sales a Mouse to his customer(croma) 30 $ means Gross price or base price  of Mouse is 30$.
+
 *pre-invoice Deduction:Yearly discount agreements made at the beginning of each financial year.
                             Gross price :30 $
                   -pre-invoice Deduction:2
