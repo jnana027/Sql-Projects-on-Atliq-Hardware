@@ -10,3 +10,5 @@ Atliq have three channels Retailer,Direct,Distributor.
 Retailer channels means they sales his product to customer like 'Croma','BEST BUY','STAPLES','FLIPKART','Amazon' etc.
 Direct  channels means they sales his product to his own customer/stores like 'Atliq Hardware E-store','Atliq Hardware exclusive' etc
 Distributor channels means they sales his product to a Big customer,the customer sales that product to small small stores,the store sales product to end End consumer.
+
+![last](https://github.com/jnana027/Sql-Projects-on-Atliq-Hardware/assets/120124430/2f215e38-2485-42d8-b041-1dab9ce515d0)
