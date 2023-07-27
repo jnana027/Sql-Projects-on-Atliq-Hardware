@@ -12,3 +12,34 @@ Direct  channels means they sales his product to his own customer/stores like 'A
 Distributor channels means they sales his product to a Big customer,the customer sales that product to small small stores,the store sales product to end End consumer.
 
 ![last](https://github.com/jnana027/Sql-Projects-on-Atliq-Hardware/assets/120124430/2f215e38-2485-42d8-b041-1dab9ce515d0)
+
+Profitb and Loss(P & L):
+Example:
+Atliq hardware sales a Mouse to his customer(croma) 30 $ means Gross price or base price  of Mouse is 30$.
+*pre-invoice Deduction:Yearly discount agreements made at the beginning of each financial year.
+                            Gross price :30 $
+                  -pre-invoice Deduction:2
+                ------------------------------- ---- 
+                         =Net Invoice sales:28
+*post-invoice Deduction is Promotional offers +Placement Fees + Performance Rebate
+                            Gross price :30 $
+                  -pre-invoice Deduction:2
+                ------------------------------- ---- 
+                         =Net Invoice sales:28
+                    -post-invoice Deduction:3
+                ------------------------------------
+                       =Net sales:25
+*Net sales is basically the Revenue of Atliq.
+*cost of oods sold(COGS) is the Manufacturing cost + Freight(Transportation)+other cost
+                            Gross price :30 $
+                  -pre-invoice Deduction:2
+                ------------------------------- ---- 
+                         =Net Invoice sales:28
+                    -post-invoice Deduction:3
+                ------------------------------------
+                            =Net sales:25
+              -cost of oods sold(COGS):20
+             ---------------------------------------
+                   =Gross Margin(Profit):5
+            Gross Margin % of Net sales(GM/NS):20 %
+
