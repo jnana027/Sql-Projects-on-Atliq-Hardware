@@ -29,16 +29,17 @@ Atliq hardware sales a Mouse to his customer(croma) 30 $ means Gross price or ba
 *post-invoice Deduction is Promotional offers +Placement Fees + Performance Rebate
 
                             Gross price :30 $
-                            
                   -pre-invoice Deduction:2
-                  
                 ------------------------------- ---- 
                          =Net Invoice sales:28
                     -post-invoice Deduction:3
                 ------------------------------------
                        =Net sales:25
+                       
 *Net sales is basically the Revenue of Atliq.
+
 *cost of oods sold(COGS) is the Manufacturing cost + Freight(Transportation)+other cost
+
                             Gross price :30 $
                   -pre-invoice Deduction:2
                 ------------------------------- ---- 
