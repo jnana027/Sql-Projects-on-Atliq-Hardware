@@ -1,0 +1,40 @@
+Requirement:
+
+As a Product owner,they need an aggregative monthly gross sales report for Croma india customer so that i can track how much sales this perticular customer is generating for AtliQ and manage our relationship accordingly.
+
+The report have following fields
+1.month
+2.Total gross sales to Amazon india this month
+
+Gross Sales Report: Total Sales Amount
+
+-- Generate monthly gross sales report for Croma India for all the years
+	SELECT 
+            s.date, 
+    	    SUM(ROUND(s.sold_quantity*g.gross_price,2)) as monthly_sales
+	FROM fact_sales_monthly s
+	JOIN fact_gross_price g
+        ON g.fiscal_year=get_fiscal_year(s.date) AND g.product_code=s.product_code
+	WHERE 
+             customer_code=90002002
+	GROUP BY date;
+
+
+
+Generate a yearly report for Croma India where there are two columns
+
+1. Fiscal Year
+2. Total Gross Sales amount In that year from Croma
+
+	select
+            get_fiscal_year(date) as fiscal_year,
+            sum(round(sold_quantity*g.gross_price,2)) as yearly_sales
+	from fact_sales_monthly s
+	join fact_gross_price g
+	on 
+	    g.fiscal_year=get_fiscal_year(s.date) and
+	    g.product_code=s.product_code
+	where
+	    customer_code=90002002
+	group by get_fiscal_year(date)
+	order by fiscal_year;
