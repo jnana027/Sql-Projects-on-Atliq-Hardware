@@ -1,0 +1,127 @@
+Requirement:
+
+As a product owner,they want to generate report of individual product sales for croma india customer for 
+Fy=2021 so that i can track individuals product sales and run further product analysis on it.
+
+The report have the following fields:
+1.Month
+2.Product Name
+3.Variant
+4.Sold Quantity
+5.Gross price per item
+6.Gross price total
+
+-- a. find the customer codes for Croma india.
+	SELECT * FROM dim_customer WHERE customer like "%croma%" AND market="india";
+
+
+-- b. Get all the sales transaction data from fact_sales_monthly table for that customer(croma: 90002002)
+SELECT * FROM gdb0041.fact_sales_monthly
+ where customer_code="90002002" and
+ year(date)=2021
+ order by date desc;
+
+--*how add month->syn:DATE_ADD(date, INTERVAL value addunit)
+--DATEADD function will help you to get a new datebased on a given date by specifying the additional
+interval.
+-- b. Get all the sales transaction data from fact_sales_monthly table for that customer(croma: 90002002) in the fiscal_year 2021
+
+	SELECT * FROM fact_sales_monthly 
+	WHERE 
+            customer_code=90002002 AND
+            YEAR(DATE_ADD(date, INTERVAL 4 MONTH))=2021 
+	ORDER BY date asc
+	LIMIT 100000;
+
+**What is User Define function?
+-Function created by user are called User Define function.
+-A user-defined function is a method to store a particular formula which can be reused in the queries.
+-DETERMINISTIC function means the output will be always the same for a given input.
+-NOT DETERMINISTIC function means the output will differ depending upon the time of execution even with the same input.
+
+syn:Create or Alter
+       function <name>(Parameter if any)return <Type>
+       As
+       Begin
+       Stmts
+       Return<expression>
+       End
+Example:
+   CREATE FUNCTION `get_fiscal_year`(
+                       calender_date date
+                        ) RETURNS int
+                          DETERMINISTIC
+                          BEGIN
+                          declare Fiscal_year int;
+                          set Fiscal_year=year(date_add(calender_date,interval 4 month));
+                          RETURN Fiscal_year;
+                          END
+
+-- d. Replacing the function created in the step:b
+	SELECT * FROM fact_sales_monthly 
+	WHERE 
+            customer_code=90002002 AND
+            get_fiscal_year(date)=2021 
+	ORDER BY date asc
+	LIMIT 100000;
+
+
+**How to create Quarter function.
+CREATE FUNCTION `get_fiscal_quarter`(
+calender_date date) RETURNS char(2) CHARSET utf8mb4
+    DETERMINISTIC
+BEGIN
+  declare m tinyint;
+  declare qtr char(4);
+  set m=month(calender_date);
+  case 
+  when m in (9,10,11) then
+  set qtr="Q1";
+  when m in (12,1,2) then
+  set qtr="Q2";
+  when m in (3,4,5) then
+  set qtr="Q3";
+  else
+  set qtr="Q4";
+  end case;
+RETURN qtr;
+END
+
+
+SELECT * FROM gdb0041.fact_sales_monthly
+ where customer_code="90002002" and
+ get_fiscal_year(date)=2021 and 
+ get_fiscal_quarter(date)="q4"
+ order by date desc;
+
+
+-- a. Perform joins to pull product information from dim_product table.
+	SELECT s.date, s.product_code, p.product, p.variant, s.sold_quantity 
+	FROM fact_sales_monthly s
+	JOIN dim_product p
+        ON s.product_code=p.product_code
+	WHERE 
+            customer_code=90002002 AND 
+    	    get_fiscal_year(date)=2021     
+	LIMIT 1000000;
+
+
+-- b. Performing join with 'fact_gross_price' table with the above query and generating required fields
+	SELECT 
+    	    s.date, 
+            s.product_code, 
+            p.product, 
+            p.variant, 
+            s.sold_quantity, 
+            g.gross_price,
+            ROUND(s.sold_quantity*g.gross_price,2) as gross_price_total
+	FROM fact_sales_monthly s
+	JOIN dim_product p
+            ON s.product_code=p.product_code
+	JOIN fact_gross_price g
+            ON g.fiscal_year=get_fiscal_year(s.date)
+    	AND g.product_code=s.product_code
+	WHERE 
+    	    customer_code=90002002 AND 
+            get_fiscal_year(s.date)=2021     
+	LIMIT 1000000;
