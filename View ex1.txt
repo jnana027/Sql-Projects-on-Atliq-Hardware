@@ -1,0 +1,216 @@
+As a product owner,I want a report for Top market product,customers by net sales for a given fiscal year so that i can have a holistic view of our fiscal performance and can take appropriate action to address any potential issues.
+
+
+### Module: Problem Statement and Pre-Invoice Discount Report
+
+-- Include pre-invoice deductions in Croma detailed report
+	SELECT 
+    	   s.date, 
+           s.product_code, 
+           p.product, 
+	   p.variant, 
+           s.sold_quantity, 
+           g.gross_price as gross_price_per_item,
+           ROUND(s.sold_quantity*g.gross_price,2) as gross_price_total,
+           pre.pre_invoice_discount_pct
+	FROM fact_sales_monthly s
+	JOIN dim_product p
+            ON s.product_code=p.product_code
+	JOIN fact_gross_price g
+    	    ON g.fiscal_year=get_fiscal_year(s.date)
+    	    AND g.product_code=s.product_code
+	JOIN fact_pre_invoice_deductions as pre
+            ON pre.customer_code = s.customer_code AND
+            pre.fiscal_year=get_fiscal_year(s.date)
+	WHERE 
+	    s.customer_code=90002002 AND 
+    	    get_fiscal_year(s.date)=2021     
+	LIMIT 1000000;
+
+
+
+
+-- Same report but all the customers
+	SELECT 
+    	   s.date, 
+           s.product_code, 
+           p.product, 
+	   p.variant, 
+           s.sold_quantity, 
+           g.gross_price as gross_price_per_item,
+           ROUND(s.sold_quantity*g.gross_price,2) as gross_price_total,
+           pre.pre_invoice_discount_pct
+	FROM fact_sales_monthly s
+	JOIN dim_product p
+            ON s.product_code=p.product_code
+	JOIN fact_gross_price g
+    	    ON g.fiscal_year=get_fiscal_year(s.date)
+    	    AND g.product_code=s.product_code
+	JOIN fact_pre_invoice_deductions as pre
+            ON pre.customer_code = s.customer_code AND
+            pre.fiscal_year=get_fiscal_year(s.date)
+	WHERE 
+    	    get_fiscal_year(s.date)=2021     
+	LIMIT 1000000;
+
+
+
+
+### Module: Performance Improvement # 1
+
+-- creating dim_date and joining with this table and avoid using the function 'get_fiscal_year()' to reduce the amount of time taking to run the query
+	SELECT 
+    	    s.date, 
+            s.customer_code,
+            s.product_code, 
+            p.product, p.variant, 
+            s.sold_quantity, 
+            g.gross_price as gross_price_per_item,
+            ROUND(s.sold_quantity*g.gross_price,2) as gross_price_total,
+            pre.pre_invoice_discount_pct
+	FROM fact_sales_monthly s
+	JOIN dim_date dt
+        	ON dt.calendar_date = s.date
+	JOIN dim_product p
+        	ON s.product_code=p.product_code
+	JOIN fact_gross_price g
+    		ON g.fiscal_year=dt.fiscal_year
+    		AND g.product_code=s.product_code
+	JOIN fact_pre_invoice_deductions as pre
+        	ON pre.customer_code = s.customer_code AND
+    		pre.fiscal_year=dt.fiscal_year
+	WHERE 
+    		dt.fiscal_year=2021     
+	LIMIT 1500000;
+
+
+
+### Module: Performance Improvement # 2
+
+-- Added the fiscal year in the fact_sales_monthly table itself
+	SELECT 
+    	    s.date, 
+            s.customer_code,
+            s.product_code, 
+            p.product, p.variant, 
+            s.sold_quantity, 
+            g.gross_price as gross_price_per_item,
+            ROUND(s.sold_quantity*g.gross_price,2) as gross_price_total,
+            pre.pre_invoice_discount_pct
+	FROM fact_sales_monthly s
+	JOIN dim_product p
+        	ON s.product_code=p.product_code
+	JOIN fact_gross_price g
+    		ON g.fiscal_year=s.fiscal_year
+    		AND g.product_code=s.product_code
+	JOIN fact_pre_invoice_deductions as pre
+        	ON pre.customer_code = s.customer_code AND
+    		pre.fiscal_year=s.fiscal_year
+	WHERE 
+    		s.fiscal_year=2021     
+	LIMIT 1500000;
+
+
+
+Find out net_invoice_sale(using CTE).
+with cte1 as
+(SELECT 
+    	   s.date, 
+           s.product_code, 
+           p.product, 
+	   p.variant, 
+           s.sold_quantity, 
+           g.gross_price as gross_price_per_item,
+           ROUND(s.sold_quantity*g.gross_price,2) as gross_price_total,
+           pre.pre_invoice_discount_pct
+	FROM fact_sales_monthly s
+	JOIN dim_product p
+            ON s.product_code=p.product_code
+	JOIN fact_gross_price g
+    	    ON g.fiscal_year=s.fiscal_year
+    	    AND g.product_code=s.product_code
+	JOIN fact_pre_invoice_deductions as pre
+            ON pre.customer_code = s.customer_code AND
+            pre.fiscal_year=s.fiscal_year
+	WHERE 
+    	    s.fiscal_year=2021     
+	LIMIT 1000000)
+    select
+    * ,
+    (gross_price_total-gross_price_total*pre_invoice_discount_pct) as net_invoice_sale
+    from cte1
+
+
+Database Views:
+-Views are virtual tables that provide you with a transformed table on the fly without taking up
+storage space.
+-CTEs (Common table expressions) are like views.But they are temporary and restricted to the particular session.
+
+-- Finally creating the view `net_sales` which inbuiltly use/include all the previous created view and gives the final result
+	CREATE VIEW `net_sales` AS
+	SELECT 
+            *, 
+    	    net_invoice_sales*(1-post_invoice_discount_pct) as net_sales
+	FROM gdb0041.sales_postinv_discount;
+
+
+
+### Module: Database Views: Post Invoice Discount, Net Sales
+
+-- Create a view for post invoice deductions: `sales_postinv_discount`
+	CREATE VIEW `sales_postinv_discount` AS
+	SELECT 
+    	    s.date, s.fiscal_year,
+            s.customer_code, s.market,
+            s.product_code, s.product, s.variant,
+            s.sold_quantity, s.gross_price_total,
+            s.pre_invoice_discount_pct,
+            (s.gross_price_total-s.pre_invoice_discount_pct*s.gross_price_total) as net_invoice_sales,
+            (po.discounts_pct+po.other_deductions_pct) as post_invoice_discount_pct
+	FROM sales_preinv_discount s
+	JOIN fact_post_invoice_deductions po
+		ON po.customer_code = s.customer_code AND
+   		po.product_code = s.product_code AND
+   		po.date = s.date;
+
+
+-- Create a report for net sales
+	SELECT 
+            *, 
+    	    net_invoice_sales*(1-post_invoice_discount_pct) as net_sales
+	FROM gdb0041.sales_postinv_discount;
+
+-- Finally creating the view `net_sales` which inbuiltly use/include all the previous created view and gives the final result
+	CREATE VIEW `net_sales` AS
+	SELECT 
+            *, 
+    	    net_invoice_sales*(1-post_invoice_discount_pct) as net_sales
+	FROM gdb0041.sales_postinv_discount;
+
+
+1) Create a view for gross sales. It should have the following columns,
+
+	date, fiscal_year, customer_code, customer, market, product_code, product, variant,
+	sold_quanity, gross_price_per_item, gross_price_total
+
+select
+ s.date,
+ s.fiscal_year,
+ s.customer_code,
+ c.customer,
+ c.market,
+ p.product_code,
+ p.product,
+ p.variant,
+  s.sold_quantity,
+ g.gross_price as gross_price_per_item,
+ round(s.sold_quantity*g.gross_price) as gross_price_total
+ from fact_sales_monthly s 
+ join dim_customer c 
+ on s.customer_code=c.customer_code
+ join dim_product p 
+ on p.product_code=s.product_code
+ join fact_gross_price g
+ on g.product_code=s.product_code and
+ g.fiscal_year=s.fiscal_year
+;
