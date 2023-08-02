@@ -1,0 +1,149 @@
+Window functions: 
+-A window function performs a calculation across a specified set of table rows with reference to the
+current row.
+-over() clause is a window function that will execute the aggregation formula across a specified set of
+rows.
+-To specify the set of rows, one can use the partition clause inside over clause and specify the category
+name.
+
+
+-- show % of total expense
+	select 
+             *,
+    	     amount*100/sum(amount) over() as pct
+	from random_tables.expenses 
+	order by category;
+
+-- show % of total expense per category
+	select 
+            *,
+    	    amount*100/sum(amount) over(partition by category) as pct
+	from random_tables.expenses 
+	order by category,  pct desc;
+
+-- Show expenses per category till date
+	select 
+             *,
+             sum(amount) over(partition by category order by date) as expenses_till_date
+	from random_tables.expenses;
+
+
+-- find out customer wise net sales percentage contribution 
+	with cte1 as (
+		select 
+                    customer, 
+                    round(sum(net_sales)/1000000,2) as net_sales_mln
+        	from net_sales s
+        	join dim_customer c
+                    on s.customer_code=c.customer_code
+        	where s.fiscal_year=2021
+        	group by customer)
+	select 
+            *,
+            net_sales_mln*100/sum(net_sales_mln) over() as pct_net_sales
+	from cte1
+	order by net_sales_mln desc
+
+As aproduct owner,they want to see region wise  % net sales breakdown by customers in a respective region so that i can perform my regional analysis on financial performance of the theory.
+
+-- Find customer wise net sales distibution per region for FY 2021
+	with cte1 as (
+		select 
+        	    c.customer,
+                    c.region,
+                    round(sum(net_sales)/1000000,2) as net_sales_mln
+                from gdb0041.net_sales n
+                join dim_customer c
+                    on n.customer_code=c.customer_code
+		where fiscal_year=2021
+		group by c.customer, c.region)
+	select
+             *,
+             net_sales_mln*100/sum(net_sales_mln) over (partition by region) as pct_share_region
+	from cte1
+	order by region, pct_share_region desc
+
+
+### Module: Window Functions: ROW_NUMBER, RANK, DENSE_RANK
+
+-- Show top 2 expenses in each category
+	select * from 
+	     (select 
+                  *, 
+    	          row_number() over (partition by category order by amount desc) as row_num
+	      from random_tables.expenses) x
+	where x.row_num<3
+
+--  If two items have same expense then row_number doesnt work. We need a true rank for which we need to use either a rank or dense_rank() function.(demo using student_marks table)
+	select 
+	     *,
+             row_number() over (order by marks desc) as row_num,
+             rank() over (order by marks desc) as rank_num,
+             dense_rank() over (order by marks desc) as dense_rank_num
+	from random_tables.student_marks;
+
+-- Find out top 3 products from each division by total quantity sold in a given year
+	with cte1 as 
+		(select
+                     p.division,
+                     p.product,
+                     sum(sold_quantity) as total_qty
+                from fact_sales_monthly s
+                join dim_product p
+                      on p.product_code=s.product_code
+                where fiscal_year=2021
+                group by p.product),
+           cte2 as 
+	        (select 
+                     *,
+                     dense_rank() over (partition by division order by total_qty desc) as drnk
+                from cte1)
+	select * from cte2 where drnk<=3
+
+-- Creating stored procedure for the above query
+	CREATE PROCEDURE `get_top_n_products_per_division_by_qty_sold`(
+        	in_fiscal_year INT,
+    		in_top_n INT
+	)
+	BEGIN
+	     with cte1 as (
+		   select
+                       p.division,
+                       p.product,
+                       sum(sold_quantity) as total_qty
+                   from fact_sales_monthly s
+                   join dim_product p
+                       on p.product_code=s.product_code
+                   where fiscal_year=in_fiscal_year
+                   group by p.product),            
+             cte2 as (
+		   select 
+                        *,
+                        dense_rank() over (partition by division order by total_qty desc) as drnk
+                   from cte1)
+	     select * from cte2 where drnk <= in_top_n;
+	END
+
+
+
+1) Retrieve the top 2 markets in every region by their gross sales amount in FY=2021.
+
+
+	with cte1 as (
+		select
+			c.market,
+			c.region,
+			round(sum(gross_price_total)/1000000,2) as gross_sales_mln
+			from gross_sales s
+			join dim_customer c
+			on c.customer_code=s.customer_code
+			where fiscal_year=2021
+			group by market
+			order by gross_sales_mln desc
+		),
+		cte2 as (
+			select *,
+			dense_rank() over(partition by region order by gross_sales_mln desc) as drnk
+			from cte1
+		)
+	select * from cte2 where drnk<=2
